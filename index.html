@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Software Tests — QA Board</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app">
+        <!-- Header -->
+        <header class="header">
+            <h1>SOFTWARE TESTS</h1>
+            <p>QA BOARD — GERENCIAMENTO DE TESTES 🧪</p>
+        </header>
+
+        <!-- Tabs -->
+        <nav class="tabs">
+            <button class="tab active" data-tab="tests">🧪 TESTES <span id="count-tests">0</span></button>
+            <button class="tab" data-tab="bugs">🐛 BUGS <span id="count-bugs">0</span></button>
+            <button class="tab" data-tab="improvements">💡 MELHORIAS <span id="count-improvements">0</span></button>
+        </nav>
+
+        <!-- Loading -->
+        <p id="loading" class="loading">Carregando... 🧪</p>
+
+        <!-- Board -->
+        <div class="board" id="board"></div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>FEITO POR JORDI BRANGER</p>
+            <div class="links">
+                <a href="https://dev-jordi.github.io/lab/" target="_blank">🌐 Portfolio</a>
+                <a href="https://linkedin.com/in/jordi-branger" target="_blank">💼 LinkedIn</a>
+                <a href="https://instagram.com/o.branger" target="_blank">📸 Instagram</a>
+                <a href="https://t.me/CronosSon" target="_blank">✈️ Telegram</a>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Confirm dialog -->
+    <div id="confirm-dialog" class="dialog-overlay hidden">
+        <div class="dialog">
+            <h3>Excluir item?</h3>
+            <p>Esta ação não pode ser desfeita.</p>
+            <div class="dialog-buttons">
+                <button id="confirm-cancel" class="btn-cancel">Cancelar</button>
+                <button id="confirm-ok" class="btn-delete">Excluir</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="app.js"></script>
+</body>
+</html>
