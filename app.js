@@ -3,6 +3,16 @@ const SUPABASE_URL = 'SUA_URL_AQUI';
 const SUPABASE_KEY = 'SUA_KEY_AQUI';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// ===== PROTEÇÃO DE ROTA =====
+// Se o usuário não estiver logado, redireciona pro login
+async function verificarAuth() {
+    var sessao = await supabase.auth.getSession();
+    if (!sessao.data.session) {
+        window.location.href = 'login.html';
+    }
+}
+verificarAuth();
+
 // ===== TABS CONFIG =====
 const TABS = {
     tests: {
