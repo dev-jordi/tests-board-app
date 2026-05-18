@@ -1,6 +1,6 @@
 // ===== CONFIG DO SUPABASE =====
-var SUPABASE_URL = 'SUA_URL_AQUI';
-var SUPABASE_KEY = 'SUA_KEY_AQUI';
+var SUPABASE_URL = 'https://etwubdlpsspdfbatjgib.supabase.co';
+var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0d3ViZGxwc3NwZGZiYXRqZ2liIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwNjQzNTksImV4cCI6MjA5NDY0MDM1OX0.wgHr2mS_b92uwwKQA_2EpJdWKL-a7KBC7380Wrn-YpM';
 var supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ===== ELEMENTOS DO DOM =====
@@ -12,57 +12,44 @@ var erroMsg = document.getElementById('erro');
 var sucessoMsg = document.getElementById('sucesso');
 
 // ===== EVENTO DE SUBMIT =====
-// Quando o usuário clica em "Cadastrar"
 form.addEventListener('submit', function(e) {
-    // Impede recarregar a página
     e.preventDefault();
-
-    // Pega os valores digitados
     var email = inputEmail.value;
     var senha = inputSenha.value;
     var confirmar = inputConfirmar.value;
 
-    // Esconde mensagens anteriores
     erroMsg.classList.add('escondido');
     sucessoMsg.classList.add('escondido');
 
-    // Verifica se as senhas são iguais
     if (senha !== confirmar) {
         erroMsg.textContent = 'As senhas não coincidem.';
         erroMsg.classList.remove('escondido');
         return;
     }
 
-    // Verifica tamanho mínimo da senha
     if (senha.length < 6) {
         erroMsg.textContent = 'A senha precisa ter pelo menos 6 caracteres.';
         erroMsg.classList.remove('escondido');
         return;
     }
 
-    // Tenta criar a conta
     fazerCadastro(email, senha);
 });
 
 // ===== FUNÇÃO DE CADASTRO =====
-// Usa o Supabase Auth para criar um novo usuário
 async function fazerCadastro(email, senha) {
     var resultado = await supabase.auth.signUp({
         email: email,
         password: senha
     });
 
-    // Se deu erro, mostra a mensagem
     if (resultado.error) {
         erroMsg.textContent = resultado.error.message;
         erroMsg.classList.remove('escondido');
         return;
     }
 
-    // Se deu certo, mostra mensagem de sucesso
     sucessoMsg.textContent = 'Conta criada! Verifique seu e-mail para confirmar.';
     sucessoMsg.classList.remove('escondido');
-
-    // Limpa o formulário
     form.reset();
 }

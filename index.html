@@ -8,39 +8,69 @@
 </head>
 <body>
     <div class="app">
-        <!-- Header -->
-        <header class="header">
-            <h1>SOFTWARE TESTS</h1>
-            <p>QA BOARD — GERENCIAMENTO DE TESTES 🧪</p>
-        </header>
-
-        <!-- Tabs -->
-        <nav class="tabs">
-            <button class="tab active" data-tab="tests">🧪 TESTES <span id="count-tests">0</span></button>
-            <button class="tab" data-tab="bugs">🐛 BUGS <span id="count-bugs">0</span></button>
-            <button class="tab" data-tab="improvements">💡 MELHORIAS <span id="count-improvements">0</span></button>
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h1>🧪 QA Board</h1>
+            </div>
+            <ul class="sidebar-menu">
+                <li><a href="#" class="menu-item active" data-page="dashboard">📊 Dashboard</a></li>
+                <li><a href="#" class="menu-item" data-page="tests">🧪 Testes</a></li>
+                <li><a href="#" class="menu-item" data-page="bugs">🐛 Bugs</a></li>
+                <li><a href="#" class="menu-item" data-page="improvements">💡 Melhorias</a></li>
+            </ul>
+            <div class="sidebar-footer">
+                <button id="btn-logout" class="btn-logout">Sair</button>
+            </div>
         </nav>
 
-        <!-- Loading -->
-        <p id="loading" class="loading">Carregando... 🧪</p>
+        <!-- Main content -->
+        <main class="main">
+            <!-- Dashboard -->
+            <section id="page-dashboard" class="page">
+                <div class="page-header">
+                    <h2>Dashboard</h2>
+                    <p>Visão geral dos testes e qualidade</p>
+                </div>
+                <div class="stats-grid" id="stats-grid"></div>
+                <div class="dashboard-panels">
+                    <div class="panel">
+                        <h3>Resumo por Status</h3>
+                        <div id="resumo-status"></div>
+                    </div>
+                    <div class="panel">
+                        <h3>Itens Recentes</h3>
+                        <div id="itens-recentes"></div>
+                    </div>
+                </div>
+            </section>
 
-        <!-- Board -->
-        <div class="board" id="board"></div>
+            <!-- Board pages -->
+            <section id="page-tests" class="page escondido">
+                <div class="page-header">
+                    <h2>🧪 Testes</h2>
+                </div>
+                <div class="board" id="board-tests"></div>
+            </section>
 
-        <!-- Footer -->
-        <footer class="footer">
-            <p>FEITO POR JORDI BRANGER</p>
-            <div class="links">
-                <a href="https://dev-jordi.github.io/lab/" target="_blank">🌐 Portfolio</a>
-                <a href="https://linkedin.com/in/jordi-branger" target="_blank">💼 LinkedIn</a>
-                <a href="https://instagram.com/o.branger" target="_blank">📸 Instagram</a>
-                <a href="https://t.me/CronosSon" target="_blank">✈️ Telegram</a>
-            </div>
-        </footer>
+            <section id="page-bugs" class="page escondido">
+                <div class="page-header">
+                    <h2>🐛 Bugs</h2>
+                </div>
+                <div class="board" id="board-bugs"></div>
+            </section>
+
+            <section id="page-improvements" class="page escondido">
+                <div class="page-header">
+                    <h2>💡 Melhorias</h2>
+                </div>
+                <div class="board" id="board-improvements"></div>
+            </section>
+        </main>
     </div>
 
     <!-- Confirm dialog -->
-    <div id="confirm-dialog" class="dialog-overlay hidden">
+    <div id="confirm-dialog" class="dialog-overlay escondido">
         <div class="dialog">
             <h3>Excluir item?</h3>
             <p>Esta ação não pode ser desfeita.</p>

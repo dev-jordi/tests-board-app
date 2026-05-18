@@ -1,10 +1,9 @@
 // ===== CONFIG =====
-const SUPABASE_URL = 'SUA_URL_AQUI';
-const SUPABASE_KEY = 'SUA_KEY_AQUI';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+var SUPABASE_URL = 'https://etwubdlpsspdfbatjgib.supabase.co';
+var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0d3ViZGxwc3NwZGZiYXRqZ2liIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwNjQzNTksImV4cCI6MjA5NDY0MDM1OX0.wgHr2mS_b92uwwKQA_2EpJdWKL-a7KBC7380Wrn-YpM';
+var supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ===== PROTEÇÃO DE ROTA =====
-// Se o usuário não estiver logado, redireciona pro login
 async function verificarAuth() {
     var sessao = await supabase.auth.getSession();
     if (!sessao.data.session) {
@@ -13,151 +12,240 @@ async function verificarAuth() {
 }
 verificarAuth();
 
-// ===== TABS CONFIG =====
-const TABS = {
+// ===== CONFIG DAS ABAS =====
+var TABS = {
     tests: {
         table: 'tasks',
         columns: [
             { id: 'todo', title: 'A TESTAR', emoji: '🧪' },
             { id: 'doing', title: 'TESTANDO', emoji: '🔥' },
-            { id: 'done', title: 'TESTADO', emoji: '✅' },
+            { id: 'done', title: 'TESTADO', emoji: '✅' }
         ],
         addStatus: 'todo',
-        statusOrder: ['todo', 'doing', 'done'],
+        statusOrder: ['todo', 'doing', 'done']
     },
     bugs: {
         table: 'bugs',
         columns: [
             { id: 'reported', title: 'REPORTADO', emoji: '🐛' },
             { id: 'fixing', title: 'CORRIGINDO', emoji: '🔧' },
-            { id: 'fixed', title: 'CORRIGIDO', emoji: '✅' },
+            { id: 'fixed', title: 'CORRIGIDO', emoji: '✅' }
         ],
         addStatus: 'reported',
-        statusOrder: ['reported', 'fixing', 'fixed'],
+        statusOrder: ['reported', 'fixing', 'fixed']
     },
     improvements: {
         table: 'improvements',
         columns: [
             { id: 'suggested', title: 'SUGERIDO', emoji: '💡' },
             { id: 'planned', title: 'PLANEJADO', emoji: '📋' },
-            { id: 'done', title: 'IMPLEMENTADO', emoji: '✅' },
+            { id: 'done', title: 'IMPLEMENTADO', emoji: '✅' }
         ],
         addStatus: 'suggested',
-        statusOrder: ['suggested', 'planned', 'done'],
-    },
+        statusOrder: ['suggested', 'planned', 'done']
+    }
 };
 
-const COLORS = ['color-lime', 'color-pink', 'color-yellow', 'color-cyan'];
-
 // ===== STATE =====
-let activeTab = 'tests';
-let items = [];
-let deleteId = null;
+var activePage = 'dashboard';
+var data = { tasks: [], bugs: [], improvements: [] };
+var deleteId = null;
 
 // ===== DOM =====
-const boardEl = document.getElementById('board');
-const loadingEl = document.getElementById('loading');
-const confirmDialog = document.getElementById('confirm-dialog');
+var confirmDialog = document.getElementById('confirm-dialog');
 
 // ===== INIT =====
-document.addEventListener('DOMContentLoaded', () => {
-    setupTabs();
-    loadTab(activeTab);
-    setupRealtimeAll();
+document.addEventListener('DOMContentLoaded', function() {
+    setupNavigation();
     setupConfirmDialog();
+    setupLogout();
+    loadAllData();
+    setupRealtimeAll();
 });
 
-// ===== TABS =====
-function setupTabs() {
-    document.querySelectorAll('.tab').forEach((btn) => {
-        btn.addEventListener('click', () => {
-            activeTab = btn.dataset.tab;
-            document.querySelectorAll('.tab').forEach((b) => b.classList.remove('active'));
-            btn.classList.add('active');
-            loadTab(activeTab);
+// ===== NAVIGATION =====
+function setupNavigation() {
+    var items = document.querySelectorAll('.menu-item');
+    items.forEach(function(item) {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            var page = item.dataset.page;
+            activePage = page;
+
+            // Update active class
+            items.forEach(function(i) { i.classList.remove('active'); });
+            item.classList.add('active');
+
+            // Show/hide pages
+            document.querySelectorAll('.page').forEach(function(p) { p.classList.add('escondido'); });
+            document.getElementById('page-' + page).classList.remove('escondido');
+
+            // Render board if needed
+            if (page !== 'dashboard') {
+                renderBoard(page);
+            }
         });
     });
 }
 
-// ===== LOAD DATA =====
-async function loadTab(tab) {
-    loadingEl.classList.remove('hidden');
-    boardEl.innerHTML = '';
-
-    const config = TABS[tab];
-    const { data, error } = await supabase
-        .from(config.table)
-        .select('*')
-        .order('created_at', { ascending: true });
-
-    if (error) {
-        console.error('Erro ao carregar:', error);
-        loadingEl.textContent = 'Erro ao carregar dados ❌';
-        return;
-    }
-
-    items = data || [];
-    loadingEl.classList.add('hidden');
-    renderBoard();
-    updateCounts();
+// ===== LOGOUT =====
+function setupLogout() {
+    document.getElementById('btn-logout').addEventListener('click', async function() {
+        await supabase.auth.signOut();
+        window.location.href = 'login.html';
+    });
 }
 
-// ===== RENDER =====
-function renderBoard() {
-    const config = TABS[activeTab];
+// ===== LOAD DATA =====
+async function loadAllData() {
+    var results = await Promise.all([
+        supabase.from('tasks').select('*').order('created_at', { ascending: true }),
+        supabase.from('bugs').select('*').order('created_at', { ascending: true }),
+        supabase.from('improvements').select('*').order('created_at', { ascending: true })
+    ]);
+
+    data.tasks = results[0].data || [];
+    data.bugs = results[1].data || [];
+    data.improvements = results[2].data || [];
+
+    renderDashboard();
+}
+
+// ===== DASHBOARD =====
+function renderDashboard() {
+    renderStats();
+    renderResumo();
+    renderRecentes();
+}
+
+function renderStats() {
+    var grid = document.getElementById('stats-grid');
+    var totalTests = data.tasks.length;
+    var totalBugs = data.bugs.length;
+    var totalImprovements = data.improvements.length;
+    var testsDone = data.tasks.filter(function(t) { return t.status === 'done'; }).length;
+    var bugsDone = data.bugs.filter(function(b) { return b.status === 'fixed'; }).length;
+    var total = totalTests + totalBugs + totalImprovements;
+
+    grid.innerHTML = ''
+        + criarStatCard('Total de Itens', total, 'em todas as categorias')
+        + criarStatCard('Testes', totalTests, testsDone + ' concluídos')
+        + criarStatCard('Bugs', totalBugs, bugsDone + ' corrigidos')
+        + criarStatCard('Melhorias', totalImprovements, 'sugestões registradas');
+}
+
+function criarStatCard(label, value, hint) {
+    return '<div class="stat-card">'
+        + '<div class="stat-label">' + label + '</div>'
+        + '<div class="stat-value">' + value + '</div>'
+        + '<div class="stat-hint">' + hint + '</div>'
+        + '</div>';
+}
+
+function renderResumo() {
+    var container = document.getElementById('resumo-status');
+    var items = [
+        { label: 'A Testar', count: data.tasks.filter(function(t) { return t.status === 'todo'; }).length, color: '#1877f2' },
+        { label: 'Testando', count: data.tasks.filter(function(t) { return t.status === 'doing'; }).length, color: '#f39c12' },
+        { label: 'Testado', count: data.tasks.filter(function(t) { return t.status === 'done'; }).length, color: '#27ae60' },
+        { label: 'Bugs Reportados', count: data.bugs.filter(function(b) { return b.status === 'reported'; }).length, color: '#e74c3c' },
+        { label: 'Bugs Corrigidos', count: data.bugs.filter(function(b) { return b.status === 'fixed'; }).length, color: '#27ae60' }
+    ];
+
+    var max = Math.max.apply(null, items.map(function(i) { return i.count; })) || 1;
+    var html = '';
+
+    items.forEach(function(item) {
+        var pct = (item.count / max) * 100;
+        html += '<div class="resumo-item">'
+            + '<div class="resumo-label"><span>' + item.label + '</span><span>' + item.count + '</span></div>'
+            + '<div class="resumo-bar"><div class="resumo-bar-fill" style="width:' + pct + '%;background:' + item.color + '"></div></div>'
+            + '</div>';
+    });
+
+    container.innerHTML = html;
+}
+
+function renderRecentes() {
+    var container = document.getElementById('itens-recentes');
+    var todos = [];
+
+    data.tasks.forEach(function(t) { todos.push({ text: t.text, type: 'tests', date: t.created_at }); });
+    data.bugs.forEach(function(b) { todos.push({ text: b.text, type: 'bugs', date: b.created_at }); });
+    data.improvements.forEach(function(i) { todos.push({ text: i.text, type: 'improvements', date: i.created_at }); });
+
+    todos.sort(function(a, b) { return new Date(b.date) - new Date(a.date); });
+
+    var html = '';
+    var labels = { tests: '🧪 Teste', bugs: '🐛 Bug', improvements: '💡 Melhoria' };
+
+    todos.slice(0, 8).forEach(function(item) {
+        html += '<div class="item-recente">'
+            + '<span class="badge badge-' + item.type + '">' + labels[item.type] + '</span>'
+            + '<span>' + item.text + '</span>'
+            + '</div>';
+    });
+
+    if (todos.length === 0) {
+        html = '<p style="color:#606770;font-size:0.85rem;">Nenhum item ainda.</p>';
+    }
+
+    container.innerHTML = html;
+}
+
+// ===== BOARD RENDER =====
+function renderBoard(tab) {
+    var config = TABS[tab];
+    var boardEl = document.getElementById('board-' + tab);
+    var items = data[config.table] || [];
     boardEl.innerHTML = '';
 
-    config.columns.forEach((col) => {
-        const colItems = items.filter((item) => item.status === col.id);
-        const colEl = createColumn(col, colItems, config);
+    config.columns.forEach(function(col) {
+        var colItems = items.filter(function(item) { return item.status === col.id; });
+        var colEl = criarColuna(col, colItems, config, tab);
         boardEl.appendChild(colEl);
     });
 }
 
-function createColumn(col, colItems, config) {
-    const div = document.createElement('div');
+function criarColuna(col, colItems, config, tab) {
+    var div = document.createElement('div');
     div.className = 'column';
-    div.dataset.status = col.id;
 
     // Header
-    const header = document.createElement('div');
+    var header = document.createElement('div');
     header.className = 'column-header';
-    header.innerHTML = `
-        <span>${col.emoji}</span>
-        <h2>${col.title}</h2>
-        <span class="column-count">${colItems.length}</span>
-    `;
+    header.innerHTML = '<span>' + col.emoji + '</span><h4>' + col.title + '</h4><span class="column-count">' + colItems.length + '</span>';
     div.appendChild(header);
 
-    // Add form (only on first column)
+    // Add form (first column only)
     if (col.id === config.addStatus) {
-        div.appendChild(createAddForm(config));
+        div.appendChild(criarFormAdd(config, tab));
     }
 
     // Cards
-    colItems.forEach((item) => {
-        div.appendChild(createCard(item, config));
+    colItems.forEach(function(item) {
+        div.appendChild(criarCard(item, config, tab));
     });
 
     return div;
 }
 
-function createAddForm(config) {
-    const form = document.createElement('div');
+function criarFormAdd(config, tab) {
+    var form = document.createElement('div');
     form.className = 'add-form';
 
-    const row = document.createElement('div');
+    var row = document.createElement('div');
     row.className = 'add-row';
 
-    const input = document.createElement('input');
+    var input = document.createElement('input');
     input.type = 'text';
     input.placeholder = 'Novo item...';
 
-    const toggleBtn = document.createElement('button');
+    var toggleBtn = document.createElement('button');
     toggleBtn.className = 'btn-toggle';
     toggleBtn.textContent = '▼';
 
-    const addBtn = document.createElement('button');
+    var addBtn = document.createElement('button');
     addBtn.className = 'btn-add';
     addBtn.textContent = '+';
 
@@ -166,32 +254,28 @@ function createAddForm(config) {
     row.appendChild(addBtn);
     form.appendChild(row);
 
-    const textarea = document.createElement('textarea');
-    textarea.placeholder = 'Descrição (passos, resultado esperado...)';
+    var textarea = document.createElement('textarea');
+    textarea.placeholder = 'Descrição (opcional)';
     textarea.rows = 2;
     form.appendChild(textarea);
 
-    // Toggle description
-    toggleBtn.addEventListener('click', () => {
+    toggleBtn.addEventListener('click', function() {
         textarea.classList.toggle('show');
         toggleBtn.textContent = textarea.classList.contains('show') ? '▲' : '▼';
     });
 
-    // Add item
-    const handleAdd = async () => {
-        const text = input.value.trim();
+    var handleAdd = async function() {
+        var text = input.value.trim();
         if (!text) return;
 
-        const color = COLORS[Math.floor(Math.random() * COLORS.length)];
-        const { error } = await supabase.from(config.table).insert({
+        var resultado = await supabase.from(config.table).insert({
             text: text,
             description: textarea.value.trim(),
-            status: config.addStatus,
-            color: color,
+            status: config.addStatus
         });
 
-        if (error) {
-            console.error('Erro ao adicionar:', error);
+        if (resultado.error) {
+            console.error('Erro ao adicionar:', resultado.error);
             return;
         }
 
@@ -202,73 +286,73 @@ function createAddForm(config) {
     };
 
     addBtn.addEventListener('click', handleAdd);
-    input.addEventListener('keydown', (e) => {
+    input.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') handleAdd();
     });
 
     return form;
 }
 
-function createCard(item, config) {
-    const card = document.createElement('div');
-    card.className = `card ${item.color || 'color-lime'}`;
+function criarCard(item, config, tab) {
+    var card = document.createElement('div');
+    card.className = 'card';
 
-    const statusIdx = config.statusOrder.indexOf(item.status);
-    const isDone = statusIdx === config.statusOrder.length - 1;
+    var statusIdx = config.statusOrder.indexOf(item.status);
+    var isDone = statusIdx === config.statusOrder.length - 1;
 
-    // Top row: text + desc button + delete
-    const top = document.createElement('div');
+    // Top
+    var top = document.createElement('div');
     top.className = 'card-top';
 
-    const textEl = document.createElement('span');
+    var textEl = document.createElement('span');
     textEl.className = 'card-text' + (isDone ? ' done' : '');
     textEl.textContent = item.text;
     top.appendChild(textEl);
 
     if (item.description) {
-        const descBtn = document.createElement('button');
+        var descBtn = document.createElement('button');
         descBtn.className = 'btn-desc';
         descBtn.textContent = '📄';
         top.appendChild(descBtn);
 
-        const descEl = document.createElement('div');
+        var descEl = document.createElement('div');
         descEl.className = 'card-description';
         descEl.textContent = item.description;
         card.appendChild(top);
         card.appendChild(descEl);
 
-        descBtn.addEventListener('click', () => {
+        descBtn.addEventListener('click', function() {
             descEl.classList.toggle('show');
         });
     } else {
         card.appendChild(top);
     }
 
-    const deleteBtn = document.createElement('button');
+    var deleteBtn = document.createElement('button');
     deleteBtn.className = 'btn-x';
     deleteBtn.textContent = '✕';
-    deleteBtn.addEventListener('click', () => showConfirm(item.id, config.table));
+    deleteBtn.addEventListener('click', function() { showConfirm(item.id, config.table, tab); });
     top.appendChild(deleteBtn);
 
     // Move buttons
-    const actions = document.createElement('div');
+    var actions = document.createElement('div');
     actions.className = 'card-actions';
 
     if (statusIdx > 0) {
-        const prevStatus = config.statusOrder[statusIdx - 1];
-        const btnLeft = document.createElement('button');
+        var prevStatus = config.statusOrder[statusIdx - 1];
+        var btnLeft = document.createElement('button');
         btnLeft.className = 'btn-move';
         btnLeft.textContent = '◀ ' + prevStatus.toUpperCase();
-        btnLeft.addEventListener('click', () => moveItem(item.id, prevStatus, config.table));
+        btnLeft.addEventListener('click', function() { moveItem(item.id, prevStatus, config.table, tab); });
         actions.appendChild(btnLeft);
     }
 
     if (statusIdx < config.statusOrder.length - 1) {
-        const nextStatus = config.statusOrder[statusIdx + 1];
-        const btnRight = document.createElement('button');
+        var nextStatus = config.statusOrder[statusIdx + 1];
+        var btnRight = document.createElement('button');
         btnRight.className = 'btn-move';
         btnRight.textContent = nextStatus.toUpperCase() + ' ▶';
-        btnRight.addEventListener('click', () => moveItem(item.id, nextStatus, config.table));
+        btnRight.addEventListener('click', function() { moveItem(item.id, nextStatus, config.table, tab); });
         actions.appendChild(btnRight);
     }
 
@@ -277,72 +361,59 @@ function createCard(item, config) {
 }
 
 // ===== ACTIONS =====
-async function moveItem(id, newStatus, table) {
-    const { error } = await supabase.from(table).update({ status: newStatus }).eq('id', id);
-    if (error) console.error('Erro ao mover:', error);
+async function moveItem(id, newStatus, table, tab) {
+    var resultado = await supabase.from(table).update({ status: newStatus }).eq('id', id);
+    if (resultado.error) console.error('Erro ao mover:', resultado.error);
 }
 
-async function deleteItem(id, table) {
-    const { error } = await supabase.from(table).delete().eq('id', id);
-    if (error) console.error('Erro ao excluir:', error);
+async function deleteItem(id, table, tab) {
+    var resultado = await supabase.from(table).delete().eq('id', id);
+    if (resultado.error) console.error('Erro ao excluir:', resultado.error);
 }
 
 // ===== CONFIRM DIALOG =====
 function setupConfirmDialog() {
-    document.getElementById('confirm-cancel').addEventListener('click', () => {
-        confirmDialog.classList.add('hidden');
+    document.getElementById('confirm-cancel').addEventListener('click', function() {
+        confirmDialog.classList.add('escondido');
         deleteId = null;
     });
 
-    document.getElementById('confirm-ok').addEventListener('click', async () => {
+    document.getElementById('confirm-ok').addEventListener('click', async function() {
         if (deleteId) {
-            await deleteItem(deleteId.id, deleteId.table);
+            await deleteItem(deleteId.id, deleteId.table, deleteId.tab);
             deleteId = null;
         }
-        confirmDialog.classList.add('hidden');
+        confirmDialog.classList.add('escondido');
     });
 }
 
-function showConfirm(id, table) {
-    deleteId = { id, table };
-    confirmDialog.classList.remove('hidden');
+function showConfirm(id, table, tab) {
+    deleteId = { id: id, table: table, tab: tab };
+    confirmDialog.classList.remove('escondido');
 }
 
 // ===== REALTIME =====
 function setupRealtimeAll() {
-    ['tasks', 'bugs', 'improvements'].forEach((table) => {
+    ['tasks', 'bugs', 'improvements'].forEach(function(table) {
         supabase
             .channel(table + '-realtime')
-            .on('postgres_changes', { event: '*', schema: 'public', table: table }, () => {
-                // Reload only if this table matches the active tab
-                const config = TABS[activeTab];
-                if (config.table === table) {
-                    loadTab(activeTab);
-                } else {
-                    // Update counts for other tabs
-                    updateCountForTable(table);
-                }
+            .on('postgres_changes', { event: '*', schema: 'public', table: table }, function() {
+                reloadTable(table);
             })
             .subscribe();
     });
 }
 
-async function updateCountForTable(table) {
-    const { count } = await supabase.from(table).select('*', { count: 'exact', head: true });
-    const tabName = Object.keys(TABS).find((key) => TABS[key].table === table);
-    if (tabName) {
-        document.getElementById('count-' + tabName).textContent = count || 0;
+async function reloadTable(table) {
+    var resultado = await supabase.from(table).select('*').order('created_at', { ascending: true });
+    data[table] = resultado.data || [];
+
+    // Re-render dashboard
+    renderDashboard();
+
+    // Re-render board if active
+    var tab = Object.keys(TABS).find(function(key) { return TABS[key].table === table; });
+    if (tab && activePage === tab) {
+        renderBoard(tab);
     }
-}
-
-function updateCounts() {
-    // Update active tab count from loaded items
-    document.getElementById('count-' + activeTab).textContent = items.length;
-
-    // Fetch counts for other tabs
-    Object.keys(TABS).forEach((tab) => {
-        if (tab !== activeTab) {
-            updateCountForTable(TABS[tab].table);
-        }
-    });
 }

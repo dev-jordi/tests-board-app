@@ -3,20 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login — Software Tests</title>
+    <title>Login — QA Board</title>
     <link rel="stylesheet" href="login.css">
 </head>
 <body>
-    <!-- Container principal da página -->
     <div class="container">
-
-        <!-- Cabeçalho com título do app -->
         <header>
-            <h1>🧪 SOFTWARE TESTS</h1>
+            <h1>🧪 QA Board</h1>
             <p>Faça login para acessar o board</p>
         </header>
 
-        <!-- Formulário de login -->
         <form id="form-login">
             <div class="campo">
                 <label for="email">E-mail</label>
@@ -28,18 +24,14 @@
                 <input type="password" id="senha" placeholder="Sua senha" required>
             </div>
 
-            <!-- Mensagem de erro (escondida por padrão) -->
-            <p id="erro" class="erro escondido">E-mail ou senha incorretos.</p>
+            <p id="erro" class="erro escondido"></p>
 
             <button type="submit" class="btn-entrar">Entrar</button>
         </form>
 
-        <!-- Link para cadastro -->
         <p class="link-cadastro">Não tem conta? <a href="cadastro.html">Cadastre-se</a></p>
-
     </div>
 
-    <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="login.js"></script>
 </body>
