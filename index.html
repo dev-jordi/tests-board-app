@@ -20,6 +20,7 @@
                 <li><a href="#" class="menu-item" data-page="improvements">💡 Melhorias</a></li>
             </ul>
             <div class="sidebar-footer">
+                <button id="btn-theme" class="btn-theme">🌙 Dark Mode</button>
                 <button id="btn-logout" class="btn-logout">Sair</button>
             </div>
         </nav>
@@ -35,11 +36,15 @@
                 <div class="stats-grid" id="stats-grid"></div>
                 <div class="dashboard-panels">
                     <div class="panel">
-                        <h3>Resumo por Status</h3>
+                        <div class="panel-header">
+                            <h3>📈 Resumo por Status</h3>
+                        </div>
                         <div id="resumo-status"></div>
                     </div>
                     <div class="panel">
-                        <h3>Itens Recentes</h3>
+                        <div class="panel-header">
+                            <h3>🕐 Itens Recentes</h3>
+                        </div>
                         <div id="itens-recentes"></div>
                     </div>
                 </div>

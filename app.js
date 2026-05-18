@@ -59,6 +59,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setupNavigation();
     setupConfirmDialog();
     setupLogout();
+    setupTheme();
     loadAllData();
     setupRealtimeAll();
 });
@@ -96,6 +97,22 @@ function setupLogout() {
     });
 }
 
+// ===== DARK MODE =====
+function setupTheme() {
+    var btn = document.getElementById('btn-theme');
+    var saved = localStorage.getItem('theme');
+    if (saved === 'dark') {
+        document.body.classList.add('dark');
+        btn.textContent = '☀️ Light Mode';
+    }
+    btn.addEventListener('click', function() {
+        document.body.classList.toggle('dark');
+        var isDark = document.body.classList.contains('dark');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        btn.textContent = isDark ? '☀️ Light Mode' : '🌙 Dark Mode';
+    });
+}
+
 // ===== LOAD DATA =====
 async function loadAllData() {
     var results = await Promise.all([
@@ -128,14 +145,15 @@ function renderStats() {
     var total = totalTests + totalBugs + totalImprovements;
 
     grid.innerHTML = ''
-        + criarStatCard('Total de Itens', total, 'em todas as categorias')
-        + criarStatCard('Testes', totalTests, testsDone + ' concluídos')
-        + criarStatCard('Bugs', totalBugs, bugsDone + ' corrigidos')
-        + criarStatCard('Melhorias', totalImprovements, 'sugestões registradas');
+        + criarStatCard('📊', 'Total de Itens', total, 'em todas as categorias', 'stat-total')
+        + criarStatCard('🧪', 'Testes', totalTests, testsDone + ' concluídos', 'stat-tests')
+        + criarStatCard('🐛', 'Bugs', totalBugs, bugsDone + ' corrigidos', 'stat-bugs')
+        + criarStatCard('💡', 'Melhorias', totalImprovements, 'sugestões registradas', 'stat-improvements');
 }
 
-function criarStatCard(label, value, hint) {
-    return '<div class="stat-card">'
+function criarStatCard(icon, label, value, hint, cls) {
+    return '<div class="stat-card ' + cls + '">'
+        + '<div class="stat-icon">' + icon + '</div>'
         + '<div class="stat-label">' + label + '</div>'
         + '<div class="stat-value">' + value + '</div>'
         + '<div class="stat-hint">' + hint + '</div>'
@@ -193,12 +211,51 @@ function renderRecentes() {
     container.innerHTML = html;
 }
 
+// ===== PROGRESSO =====
+function renderProgresso() {
+    var container = document.getElementById('progresso-geral');
+    var testsTotal = data.tasks.length;
+    var testsDone = data.tasks.filter(function(t) { return t.status === 'done'; }).length;
+    var bugsTotal = data.bugs.length;
+    var bugsDone = data.bugs.filter(function(b) { return b.status === 'fixed'; }).length;
+    var impTotal = data.improvements.length;
+    var impDone = data.improvements.filter(function(i) { return i.status === 'done'; }).length;
+
+    var items = [
+        { label: '🧪 Testes concluídos', done: testsDone, total: testsTotal, color: '#6c5ce7' },
+        { label: '🐛 Bugs corrigidos', done: bugsDone, total: bugsTotal, color: '#e74c3c' },
+        { label: '💡 Melhorias implementadas', done: impDone, total: impTotal, color: '#f39c12' }
+    ];
+
+    var html = '';
+    items.forEach(function(item) {
+        var pct = item.total > 0 ? Math.round((item.done / item.total) * 100) : 0;
+        html += '<div class="progresso-item">'
+            + '<div class="progresso-top"><span class="progresso-label">' + item.label + '</span><span class="progresso-pct">' + pct + '%</span></div>'
+            + '<div class="progresso-bar"><div class="progresso-bar-fill" style="width:' + pct + '%;background:' + item.color + '"></div></div>'
+            + '</div>';
+    });
+
+    container.innerHTML = html;
+}
+
+// ===== ATALHOS =====
+function setupAtalhos() {
+    document.querySelectorAll('.atalho-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var page = btn.dataset.goto;
+            document.querySelector('.menu-item[data-page="' + page + '"]').click();
+        });
+    });
+}
+
 // ===== BOARD RENDER =====
 function renderBoard(tab) {
     var config = TABS[tab];
     var boardEl = document.getElementById('board-' + tab);
     var items = data[config.table] || [];
     boardEl.innerHTML = '';
+    boardEl.className = 'board board-' + tab;
 
     config.columns.forEach(function(col) {
         var colItems = items.filter(function(item) { return item.status === col.id; });
